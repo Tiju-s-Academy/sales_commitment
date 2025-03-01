@@ -6,8 +6,7 @@ class SalesCommitment(models.Model):
     _description = 'Sales Commitment'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Reference', required=True, copy=False, 
-                      readonly=True, default=lambda self: _('New'))
+    name = fields.Char(string='Name', required=True)
     date = fields.Date(string='Commitment Date', default=fields.Date.context_today, 
                       required=True, tracking=True)
     user_id = fields.Many2one('res.users', string='Salesperson', 
