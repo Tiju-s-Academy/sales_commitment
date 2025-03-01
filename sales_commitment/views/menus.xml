@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_sales_commitment_root"
+              name="Sales Commitments"
+              sequence="5"/>
+
+    <menuitem id="menu_sales_commitment"
+              name="Today's Commitments"
+              action="action_sales_commitment"
+              parent="menu_sales_commitment_root"
+              sequence="1"/>
+</odoo>
