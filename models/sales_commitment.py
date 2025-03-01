@@ -17,8 +17,13 @@ class SalesCommitment(models.Model):
                                       related='lead_id.stage_id', store=True)
     current_stage_id = fields.Many2one('crm.stage', string='Current Stage', 
                                       related='lead_id.stage_id', store=True)
-    expected_revenue = fields.Float(related='lead_id.expected_revenue', store=True)
-    actual_revenue = fields.Float(compute='_compute_actual_revenue', store=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True, 
+                                default=lambda self: self.env.company)
+    currency_id = fields.Many2one('res.currency', related='company_id.currency_id')
+    expected_revenue = fields.Monetary(related='lead_id.expected_revenue', store=True, 
+                                     currency_field='currency_id')
+    actual_revenue = fields.Monetary(compute='_compute_actual_revenue', store=True, 
+                                   currency_field='currency_id')
     state = fields.Selection([
         ('draft', 'Draft'),
         ('committed', 'Committed'),
