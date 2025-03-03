@@ -19,10 +19,26 @@ class SalesCommitment(models.Model):
                                       related='lead_id.stage_id', store=True)
     company_id = fields.Many2one('res.company', string='Company', required=True, 
                                 default=lambda self: self.env.company)
-    expected_revenue = fields.Integer(string="Expected Revenue", related='lead_id.expected_revenue',
-                                    store=True, tracking=True)
-    actual_revenue = fields.Integer(string="Actual Revenue", compute='_compute_actual_revenue',
-                                  store=True)
+    company_currency = fields.Many2one(
+        'res.currency',
+        string='Company Currency',
+        related='company_id.currency_id',
+        readonly=True,
+        store=True,
+    )
+    expected_revenue = fields.Monetary(
+        string="Expected Revenue",
+        related='lead_id.expected_revenue',
+        currency_field='company_currency',
+        store=True,
+        tracking=True
+    )
+    actual_revenue = fields.Monetary(
+        string="Actual Revenue",
+        compute='_compute_actual_revenue',
+        currency_field='company_currency',
+        store=True
+    )
     state = fields.Selection([
         ('draft', 'Draft'),
         ('committed', 'Committed'),
