@@ -20,10 +20,12 @@ class SalesCommitment(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True, 
                                 default=lambda self: self.env.company)
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id')
-    expected_revenue = fields.Monetary(related='lead_id.expected_revenue', store=True, 
-                                     currency_field='currency_id')
-    actual_revenue = fields.Monetary(compute='_compute_actual_revenue', store=True, 
-                                   currency_field='currency_id')
+    company_currency = fields.Many2one(string='Currency', related='company_id.currency_id', 
+                                     readonly=True, relation="res.currency")
+    expected_revenue = fields.Float(string="Expected Revenue", related='lead_id.expected_revenue',
+                                  store=True)
+    actual_revenue = fields.Float(string="Actual Revenue", compute='_compute_actual_revenue',
+                                store=True)
     state = fields.Selection([
         ('draft', 'Draft'),
         ('committed', 'Committed'),
