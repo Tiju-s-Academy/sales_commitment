@@ -47,6 +47,13 @@ class SalesCommitment(models.Model):
     new_line_ids = fields.One2many('sales.commitment.line', 'commitment_id',
                                   domain=[('is_pending', '=', False)],
                                   string='New Opportunities')
+    excluded_lead_ids = fields.Many2many('crm.lead', compute='_compute_excluded_leads',
+                                       string='Excluded Leads')
+
+    @api.depends('pending_line_ids.lead_id')
+    def _compute_excluded_leads(self):
+        for record in self:
+            record.excluded_lead_ids = record.pending_line_ids.mapped('lead_id')
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -58,25 +65,27 @@ class SalesCommitment(models.Model):
     @api.model
     def create(self, vals):
         # Get pending leads from previous commitments
-        pending_leads = self.env['sales.commitment.line'].search([
-            ('lead_id.user_id', '=', vals.get('user_id')),
-            ('lead_id.stage_id.is_won', '=', False),
-            ('is_pending', '=', True)
-        ])
-        
-        result = super().create(vals)
-        
-        # Copy pending leads to new commitment
-        for lead in pending_leads:
-            self.env['sales.commitment.line'].create({
-                'commitment_id': result.id,
-                'lead_id': lead.lead_id.id,
-                'is_pending': True,
-                'initial_stage_id': lead.initial_stage_id.id,
-                'original_commitment_date': lead.original_commitment_date
-            })
-        
-        return result
+        if vals.get('user_id'):
+            pending_leads = self.env['sales.commitment.line'].search([
+                ('lead_id.user_id', '=', vals['user_id']),
+                ('lead_id.stage_id.is_won', '=', False),
+                ('is_pending', '=', True)
+            ])
+            
+            result = super().create(vals)
+            
+            # Copy pending leads to new commitment
+            for lead in pending_leads:
+                self.env['sales.commitment.line'].create({
+                    'commitment_id': result.id,
+                    'lead_id': lead.lead_id.id,
+                    'is_pending': True,
+                    'initial_stage_id': lead.initial_stage_id.id,
+                    'original_commitment_date': lead.original_commitment_date
+                })
+            
+            return result
+        return super().create(vals)
 
     @api.depends('commitment_line_ids.expected_revenue', 'commitment_line_ids.actual_revenue')
     def _compute_total_revenue(self):
