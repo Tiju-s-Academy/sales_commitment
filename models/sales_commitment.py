@@ -80,12 +80,21 @@ class SalesCommitmentLine(models.Model):
                              domain="[('user_id', '=', parent.user_id)]")
     date_deadline = fields.Date(related='lead_id.date_deadline', string='Deadline', store=True)
     date_closed = fields.Datetime(related='lead_id.date_closed', string='Closing Date', store=True)
-    stage_id = fields.Many2one(related='lead_id.stage_id', string='Stage', store=True)
+    initial_stage_id = fields.Many2one('crm.stage', string='Initial Stage', store=True)
+    stage_id = fields.Many2one(related='lead_id.stage_id', string='Current Stage', store=True)
     expected_revenue = fields.Monetary(related='lead_id.expected_revenue', string='Expected Revenue',
                                      currency_field='company_currency', store=True)
     actual_revenue = fields.Monetary(compute='_compute_actual_revenue', string='Actual Revenue',
                                    currency_field='company_currency', store=True)
     company_currency = fields.Many2one(related='commitment_id.company_currency')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('lead_id'):
+                lead = self.env['crm.lead'].browse(vals['lead_id'])
+                vals['initial_stage_id'] = lead.stage_id.id
+        return super().create(vals_list)
 
     @api.depends('lead_id.stage_id')
     def _compute_actual_revenue(self):

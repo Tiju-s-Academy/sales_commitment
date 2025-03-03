@@ -37,7 +37,8 @@
                                     <field name="lead_id"/>
                                     <field name="date_deadline"/>
                                     <field name="date_closed"/>
-                                    <field name="stage_id"/>
+                                    <field name="initial_stage_id" string="Initial Stage" readonly="1"/>
+                                    <field name="stage_id" string="Current Stage"/>
                                     <field name="expected_revenue"/>
                                     <field name="actual_revenue"/>
                                 </tree>
