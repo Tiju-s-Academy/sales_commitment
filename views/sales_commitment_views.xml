@@ -6,14 +6,16 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_commit" string="Commit" type="object" 
-                            class="oe_highlight" states="draft"/>
+                    <button name="action_commit" 
+                            string="Commit" 
+                            type="object"
+                            invisible="state != 'draft'"/>
                     <field name="state" widget="statusbar"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name" readonly="1"/>
+                            <field name="name"/>
                         </h1>
                     </div>
                     <group>
@@ -21,6 +23,8 @@
                             <field name="date"/>
                             <field name="user_id"/>
                             <field name="lead_id"/>
+                            <field name="company_id" invisible="1"/>
+                            <field name="company_currency" invisible="1"/>
                         </group>
                         <group>
                             <field name="initial_stage_id"/>
@@ -46,9 +50,8 @@
             <tree>
                 <field name="name"/>
                 <field name="date"/>
+                <field name="user_id"/>
                 <field name="lead_id"/>
-                <field name="initial_stage_id"/>
-                <field name="current_stage_id"/>
                 <field name="expected_revenue"/>
                 <field name="actual_revenue"/>
                 <field name="state"/>
@@ -100,8 +103,12 @@
     <record id="action_sales_commitment" model="ir.actions.act_window">
         <field name="name">Sales Commitments</field>
         <field name="res_model">sales.commitment</field>
-        <field name="view_mode">kanban,tree,form</field>
-        <field name="context">{'search_default_my_commitments': 1}</field>
-        <field name="domain">[('date', '=', context_today().strftime('%Y-%m-%d'))]</field>
+        <field name="view_mode">tree,form</field>
     </record>
+
+    <menuitem id="menu_sales_commitment"
+              name="Sales Commitments"
+              action="action_sales_commitment"
+              parent="crm.crm_menu_sales"
+              sequence="20"/>
 </odoo>
