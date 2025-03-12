@@ -67,7 +67,9 @@
                                 <tree editable="bottom">
                                     <field name="lead_id" 
                                            domain="[('user_id', '=', parent.user_id),
-                                                   ('id', 'not in', parent.excluded_lead_ids)]"/>
+                                                   ('id', 'not in', parent.excluded_lead_ids),
+                                                   ('id', 'not in', context.get('committed_lead_ids', []))]"
+                                           context="{'committed_lead_ids': parent.env['sales.commitment.line'].search([('user_id', '=', parent.user_id)]).mapped('lead_id.id')}"/>
                                     <field name="date_deadline"/>
                                     <field name="initial_stage_id" readonly="1"/>
                                     <field name="stage_id"/>

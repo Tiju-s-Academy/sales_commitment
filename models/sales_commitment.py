@@ -154,13 +154,14 @@ class SalesCommitmentLine(models.Model):
     _name = 'sales.commitment.line'
     _description = 'Sales Commitment Line'
     _sql_constraints = [
-        ('unique_lead_per_day', 
-         'UNIQUE(lead_id, commitment_id)', 
-         'You cannot commit the same lead twice in one commitment!')
+        ('unique_lead_user', 
+         'UNIQUE(lead_id, user_id)', 
+         'This lead is already committed! You cannot commit the same lead multiple times.')
     ]
 
     commitment_id = fields.Many2one('sales.commitment', string='Commitment', required=True, 
                                   ondelete='cascade')
+    user_id = fields.Many2one(related='commitment_id.user_id', store=True)
     lead_id = fields.Many2one('crm.lead', string='Lead/Opportunity', required=True,
                              domain="[('user_id', '=', parent.user_id)]")
     date_deadline = fields.Date(related='lead_id.date_deadline', string='Deadline', store=True)
@@ -185,6 +186,21 @@ class SalesCommitmentLine(models.Model):
                     vals['initial_stage_id'] = lead.stage_id.id
                     vals['original_commitment_date'] = fields.Date.today()
         return super().create(vals_list)
+
+    @api.constrains('lead_id', 'user_id')
+    def _check_duplicate_lead(self):
+        for record in self:
+            duplicate = self.search([
+                ('lead_id', '=', record.lead_id.id),
+                ('user_id', '=', record.user_id.id),
+                ('id', '!=', record.id)
+            ], limit=1)
+            if duplicate:
+                raise ValidationError(_(
+                    'Lead %(lead)s is already committed in %(date)s commitment!',
+                    lead=record.lead_id.name,
+                    date=duplicate.commitment_id.date.strftime('%Y-%m-%d')
+                ))
 
     def unlink(self):
         if any(line.is_pending for line in self):
