@@ -9,13 +9,13 @@
                 <button name="action_view_commitments"
                         type="object"
                         class="oe_stat_button"
-                        icon="fa-calendar-check-o"
-                        attrs="{'invisible': [('commitment_count', '=', 0)]}">
-                    <field name="commitment_count" widget="statinfo" string="Commitments"/>
+                        icon="fa-calendar-check-o">
+                    <field name="commitment_count" widget="statinfo" string="Commitments"
+                           invisible="commitment_count == 0"/>
                 </button>
             </div>
             <xpath expr="//div[hasclass('oe_title')]" position="before">
-                <div class="alert alert-info" role="alert" attrs="{'invisible': [('is_committed', '=', False)]}">
+                <div class="alert alert-info" role="alert" invisible="not is_committed">
                     This lead is in today's commitment
                 </div>
             </xpath>
@@ -46,9 +46,11 @@
                 <field name="is_committed"/>
             </kanban>
             <div class="oe_kanban_bottom_left" position="inside">
-                <span class="badge badge-info" t-if="record.is_committed.raw_value">
-                    <i class="fa fa-calendar"/> Committed Today
-                </span>
+                <t t-if="record.is_committed.raw_value">
+                    <span class="badge badge-info">
+                        <i class="fa fa-calendar"/> Committed Today
+                    </span>
+                </t>
             </div>
         </field>
     </record>
