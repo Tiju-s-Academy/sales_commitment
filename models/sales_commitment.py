@@ -61,6 +61,28 @@ class SalesCommitment(models.Model):
     team_id = fields.Many2one('crm.team', string='Sales Team', 
                              related='user_id.sale_team_id', store=True)
 
+    available_lead_ids = fields.Many2many(
+        'crm.lead', 
+        compute='_compute_available_leads',
+        string='Available Leads'
+    )
+
+    @api.depends('user_id')
+    def _compute_available_leads(self):
+        for record in self:
+            # Get all leads already committed by this user
+            committed_leads = self.env['sales.commitment.line'].search([
+                ('user_id', '=', record.user_id.id)
+            ]).mapped('lead_id')
+            
+            # Get all available leads for this user
+            available_leads = self.env['crm.lead'].search([
+                ('user_id', '=', record.user_id.id),
+                ('id', 'not in', committed_leads.ids)
+            ])
+            
+            record.available_lead_ids = available_leads
+
     @api.depends('pending_line_ids.lead_id')
     def _compute_excluded_leads(self):
         for record in self:
