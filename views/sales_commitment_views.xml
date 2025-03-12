@@ -188,7 +188,7 @@
         <field name="view_mode">calendar,pivot,tree,form</field>
         <field name="context">{
             'search_default_group_by_date': 1,
-            'team_id': context.get('default_team_id', False)
+            'default_team_id': context.get('team_id', False)
         }</field>
     </record>
 
@@ -199,12 +199,11 @@
             <search>
                 <field name="name"/>
                 <field name="user_id"/>
+                <field name="team_id"/>
                 <field name="date"/>
-                <!-- Add field for search -->
-                <field name="user" invisible="1"/>
                 <filter string="My Commitments" name="my_commitments" domain="[('user_id', '=', uid)]"/>
                 <filter string="My Team's Commitments" name="my_team_commitments" 
-                        domain="[('user_id.sale_team_id', '=', context.get('team_id', False))]"
+                        domain="[('team_id', '=', context.get('default_team_id', False))]"
                         groups="sales_team.group_sale_salesman_all_leads"/>
                 <filter string="Today" name="today" 
                         domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
@@ -212,6 +211,7 @@
                         domain="[('date', '>=', (context_today() - relativedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Group By">
                     <filter string="Salesperson" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Sales Team" name="group_by_team" context="{'group_by': 'team_id'}"/>
                     <filter string="Date" name="group_by_date" context="{'group_by': 'date'}"/>
                     <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
                 </group>
