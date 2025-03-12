@@ -67,6 +67,12 @@ class SalesCommitment(models.Model):
         string='Available Leads'
     )
 
+    _sql_constraints = [
+        ('unique_user_date', 
+         'UNIQUE(user_id, date)', 
+         'You cannot create multiple commitments for the same day!')
+    ]
+
     @api.depends('user_id')
     def _compute_available_leads(self):
         for record in self:
@@ -123,6 +129,21 @@ class SalesCommitment(models.Model):
         if 'state' not in vals and any(rec.state != 'draft' for rec in self):
             raise ValidationError(_("You cannot modify a committed record!"))
         return super().write(vals)
+
+    @api.constrains('user_id', 'date')
+    def _check_single_commitment_per_day(self):
+        for record in self:
+            # Check for existing commitments for the same user and date
+            existing = self.search_count([
+                ('user_id', '=', record.user_id.id),
+                ('date', '=', record.date),
+                ('id', '!=', record.id)
+            ])
+            if existing:
+                raise ValidationError(_(
+                    'You already have a commitment for %(date)s!',
+                    date=record.date.strftime('%Y-%m-%d')
+                ))
 
     @api.depends('user_id', 'date')
     def _compute_name(self):
