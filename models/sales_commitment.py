@@ -55,37 +55,34 @@ class SalesCommitment(models.Model):
         for record in self:
             record.excluded_lead_ids = record.pending_line_ids.mapped('lead_id')
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        for vals in vals_list:
-            if vals.get('name', _('New')) == _('New'):
-                vals['name'] = self.env['ir.sequence'].next_by_code('sales.commitment') or _('New')
-        return super().create(vals_list)
-
     @api.model
     def create(self, vals):
-        # Get pending leads from previous commitments
+        if vals.get('name', _('New')) == _('New'):
+            vals['name'] = self.env['ir.sequence'].next_by_code('sales.commitment') or _('New')
+
+        # Create the record first
+        result = super().create(vals)
+
+        # Get all pending leads from previous commitments
         if vals.get('user_id'):
             pending_leads = self.env['sales.commitment.line'].search([
                 ('lead_id.user_id', '=', vals['user_id']),
                 ('lead_id.stage_id.is_won', '=', False),
+                ('commitment_id.date', '<', vals.get('date', fields.Date.today())),
                 ('is_pending', '=', True)
             ])
-            
-            result = super().create(vals)
-            
-            # Copy pending leads to new commitment
-            for lead in pending_leads:
+
+            # Create commitment lines for pending leads
+            for line in pending_leads:
                 self.env['sales.commitment.line'].create({
                     'commitment_id': result.id,
-                    'lead_id': lead.lead_id.id,
+                    'lead_id': line.lead_id.id,
                     'is_pending': True,
-                    'initial_stage_id': lead.initial_stage_id.id,
-                    'original_commitment_date': lead.original_commitment_date
+                    'initial_stage_id': line.initial_stage_id.id,
+                    'original_commitment_date': line.original_commitment_date or line.commitment_id.date
                 })
-            
-            return result
-        return super().create(vals)
+
+        return result
 
     @api.depends('commitment_line_ids.expected_revenue', 'commitment_line_ids.actual_revenue')
     def _compute_total_revenue(self):
@@ -154,9 +151,15 @@ class SalesCommitmentLine(models.Model):
     def _compute_is_pending(self):
         today = fields.Date.today()
         for record in self:
-            if (record.commitment_id.date < today and 
-                not record.lead_id.stage_id.is_won):
-                record.is_pending = True
+            if not record.lead_id.stage_id.is_won:
+                if record.commitment_id.date < today:
+                    record.is_pending = True
+                elif record.original_commitment_date < record.commitment_id.date:
+                    record.is_pending = True
+                else:
+                    record.is_pending = False
+            else:
+                record.is_pending = False
 
     @api.depends('lead_id.stage_id')
     def _compute_actual_revenue(self):
