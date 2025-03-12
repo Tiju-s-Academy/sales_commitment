@@ -250,3 +250,38 @@ class SalesCommitmentLine(models.Model):
                 record.actual_revenue = record.expected_revenue
             else:
                 record.actual_revenue = 0.0
+
+from odoo import models, fields, api, _
+
+class CRMLead(models.Model):
+    _inherit = 'crm.lead'
+
+    commitment_line_ids = fields.One2many('sales.commitment.line', 'lead_id', string='Commitments')
+    commitment_count = fields.Integer(compute='_compute_commitment_count', string='# Commitments')
+    is_committed = fields.Boolean(compute='_compute_is_committed', store=True, 
+                                string='In Current Commitment')
+    last_commitment_date = fields.Date(compute='_compute_is_committed', store=True)
+
+    @api.depends('commitment_line_ids.commitment_id.date')
+    def _compute_is_committed(self):
+        today = fields.Date.today()
+        for record in self:
+            current_commitment = record.commitment_line_ids.filtered(
+                lambda l: l.commitment_id.date == today)
+            record.is_committed = bool(current_commitment)
+            record.last_commitment_date = max(
+                record.commitment_line_ids.mapped('commitment_id.date')) if record.commitment_line_ids else False
+
+    def _compute_commitment_count(self):
+        for record in self:
+            record.commitment_count = len(record.commitment_line_ids)
+
+    def action_view_commitments(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Commitments'),
+            'res_model': 'sales.commitment',
+            'view_mode': 'tree,form',
+            'domain': [('commitment_line_ids.lead_id', '=', self.id)],
+        }
