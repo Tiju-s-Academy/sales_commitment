@@ -14,7 +14,7 @@
                 </header>
                 <sheet>
                     <div class="alert alert-info" role="alert" 
-                         attrs="{'invisible': [('state', '!=', 'draft')]}">
+                         invisible="state != 'draft'">
                         <i class="fa fa-info-circle"/> You can only create one commitment per day.
                     </div>
                     <div class="oe_title">
