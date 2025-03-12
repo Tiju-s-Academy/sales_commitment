@@ -17,7 +17,7 @@
                     <field name="commitment_count" widget="statinfo" string="Commitments"/>
                 </button>
             </div>
-            <xpath expr="//div[hasclass('oe_title')]" position="before">
+            <xpath expr="//header" position="after">
                 <div class="alert alert-info text-center" role="alert" 
                      invisible="not is_committed">
                     <i class="fa fa-calendar"/> This lead is in today's commitment
