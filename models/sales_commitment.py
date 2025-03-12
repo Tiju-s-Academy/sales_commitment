@@ -50,6 +50,14 @@ class SalesCommitment(models.Model):
     excluded_lead_ids = fields.Many2many('crm.lead', compute='_compute_excluded_leads',
                                        string='Excluded Leads')
 
+    commitment_count = fields.Integer(string="Number of Opportunities", 
+                                    compute='_compute_counts', store=True)
+    pending_count = fields.Integer(string="Pending Opportunities", 
+                                 compute='_compute_counts', store=True)
+    success_rate = fields.Float(string="Success Rate (%)", 
+                              compute='_compute_counts', store=True)
+    color = fields.Integer(string='Color Index', compute='_compute_color')
+
     @api.depends('pending_line_ids.lead_id')
     def _compute_excluded_leads(self):
         for record in self:
@@ -89,6 +97,26 @@ class SalesCommitment(models.Model):
         for record in self:
             record.expected_revenue = sum(record.commitment_line_ids.mapped('expected_revenue'))
             record.actual_revenue = sum(record.commitment_line_ids.mapped('actual_revenue'))
+
+    @api.depends('commitment_line_ids', 'commitment_line_ids.lead_id.stage_id.is_won')
+    def _compute_counts(self):
+        for record in self:
+            total = len(record.commitment_line_ids)
+            won = len(record.commitment_line_ids.filtered(
+                lambda l: l.lead_id.stage_id.is_won))
+            record.commitment_count = total
+            record.pending_count = len(record.pending_line_ids)
+            record.success_rate = (won / total * 100) if total > 0 else 0
+
+    @api.depends('success_rate')
+    def _compute_color(self):
+        for record in self:
+            if record.success_rate >= 80:
+                record.color = 10  # green
+            elif record.success_rate >= 50:
+                record.color = 3   # yellow
+            else:
+                record.color = 1   # red
 
     def action_commit(self):
         self.write({'state': 'committed'})

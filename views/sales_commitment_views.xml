@@ -144,10 +144,67 @@
         </field>
     </record>
 
+    <record id="view_sales_commitment_calendar" model="ir.ui.view">
+        <field name="name">sales.commitment.calendar</field>
+        <field name="model">sales.commitment</field>
+        <field name="arch" type="xml">
+            <calendar string="Sales Commitments" date_start="date" color="color" mode="month">
+                <field name="user_id"/>
+                <field name="commitment_count"/>
+                <field name="expected_revenue"/>
+                <field name="actual_revenue"/>
+                <field name="success_rate" widget="percentage"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_sales_commitment_pivot" model="ir.ui.view">
+        <field name="name">sales.commitment.pivot</field>
+        <field name="model">sales.commitment</field>
+        <field name="arch" type="xml">
+            <pivot string="Sales Commitments Analysis">
+                <field name="date" type="row"/>
+                <field name="user_id" type="row"/>
+                <field name="commitment_count" type="measure"/>
+                <field name="pending_count" type="measure"/>
+                <field name="expected_revenue" type="measure"/>
+                <field name="actual_revenue" type="measure"/>
+                <field name="success_rate" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
     <record id="action_sales_commitment" model="ir.actions.act_window">
         <field name="name">Sales Commitments</field>
         <field name="res_model">sales.commitment</field>
         <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_sales_commitment_manager" model="ir.actions.act_window">
+        <field name="name">Team Commitments</field>
+        <field name="res_model">sales.commitment</field>
+        <field name="view_mode">calendar,pivot,tree,form</field>
+        <field name="context">{'search_default_group_by_date': 1}</field>
+    </record>
+
+    <record id="view_sales_commitment_search" model="ir.ui.view">
+        <field name="name">sales.commitment.search</field>
+        <field name="model">sales.commitment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="date"/>
+                <filter string="My Commitments" name="my_commitments" domain="[('user_id', '=', uid)]"/>
+                <filter string="Today" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" domain="[('date', '>=', (context_today() - relativedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Salesperson" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Date" name="group_by_date" context="{'group_by': 'date'}"/>
+                    <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
     </record>
 
     <menuitem id="menu_sales_commitment"
@@ -155,4 +212,11 @@
               action="action_sales_commitment"
               parent="crm.crm_menu_sales"
               sequence="20"/>
+
+    <menuitem id="menu_sales_commitment_manager"
+              name="Team Commitments"
+              action="action_sales_commitment_manager"
+              parent="crm.menu_crm_config"
+              sequence="5"
+              groups="sales_team.group_sale_manager"/>
 </odoo>
