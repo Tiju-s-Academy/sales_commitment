@@ -58,6 +58,9 @@ class SalesCommitment(models.Model):
                               compute='_compute_counts', store=True)
     color = fields.Integer(string='Color Index', compute='_compute_color')
 
+    team_id = fields.Many2one('crm.team', string='Sales Team', 
+                             related='user_id.sale_team_id', store=True)
+
     @api.depends('pending_line_ids.lead_id')
     def _compute_excluded_leads(self):
         for record in self:
