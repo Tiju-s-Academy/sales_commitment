@@ -15,12 +15,12 @@
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name"/>
+                            <field name="name" readonly="1"/>
                         </h1>
                     </div>
                     <group>
                         <group>
-                            <field name="date"/>
+                            <field name="date" force_save="1"/>
                             <field name="user_id"/>
                             <field name="company_id" invisible="1"/>
                             <field name="company_currency" invisible="1"/>

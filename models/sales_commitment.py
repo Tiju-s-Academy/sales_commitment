@@ -6,9 +6,9 @@ class SalesCommitment(models.Model):
     _description = 'Sales Commitment'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Name', required=True)
+    name = fields.Char(string='Name', compute='_compute_name', store=True)
     date = fields.Date(string='Commitment Date', default=fields.Date.context_today, 
-                      required=True, tracking=True)
+                      required=True, readonly=True, tracking=True)
     user_id = fields.Many2one('res.users', string='Salesperson', 
                              default=lambda self: self.env.user, required=True)
     company_id = fields.Many2one('res.company', string='Company', required=True, 
@@ -65,6 +65,8 @@ class SalesCommitment(models.Model):
 
     @api.model
     def create(self, vals):
+        if not vals.get('date'):
+            vals['date'] = fields.Date.context_today(self)
         if vals.get('name', _('New')) == _('New'):
             vals['name'] = self.env['ir.sequence'].next_by_code('sales.commitment') or _('New')
 
@@ -91,6 +93,17 @@ class SalesCommitment(models.Model):
                 })
 
         return result
+
+    @api.depends('user_id', 'date')
+    def _compute_name(self):
+        for record in self:
+            if record.user_id and record.date:
+                record.name = _("%s's Commitment - %s") % (
+                    record.user_id.name,
+                    record.date.strftime('%Y-%m-%d')
+                )
+            else:
+                record.name = _("New Commitment")
 
     @api.depends('commitment_line_ids.expected_revenue', 'commitment_line_ids.actual_revenue')
     def _compute_total_revenue(self):
