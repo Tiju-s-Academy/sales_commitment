@@ -207,8 +207,13 @@
         </field>
     </record>
 
-    <menuitem id="menu_sales_commitment"
+    <!-- Update menu items -->
+    <menuitem id="menu_sales_commitment_root"
               name="Sales Commitments"
+              sequence="5"/>
+
+    <menuitem id="menu_sales_commitment"
+              name="My Commitments"
               action="action_sales_commitment"
               parent="crm.crm_menu_sales"
               sequence="20"/>
@@ -216,7 +221,8 @@
     <menuitem id="menu_sales_commitment_manager"
               name="Team Commitments"
               action="action_sales_commitment_manager"
-              parent="crm.menu_crm_config"
+              parent="crm.crm_menu_root"
               sequence="5"
               groups="sales_team.group_sale_manager"/>
+
 </odoo>
