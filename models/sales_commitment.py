@@ -119,6 +119,11 @@ class SalesCommitment(models.Model):
 
         return result
 
+    def write(self, vals):
+        if 'state' not in vals and any(rec.state != 'draft' for rec in self):
+            raise ValidationError(_("You cannot modify a committed record!"))
+        return super().write(vals)
+
     @api.depends('user_id', 'date')
     def _compute_name(self):
         for record in self:
@@ -208,6 +213,16 @@ class SalesCommitmentLine(models.Model):
                     vals['initial_stage_id'] = lead.stage_id.id
                     vals['original_commitment_date'] = fields.Date.today()
         return super().create(vals_list)
+
+    def write(self, vals):
+        if any(line.commitment_id.state != 'draft' for line in self):
+            raise ValidationError(_("You cannot modify lines of a committed record!"))
+        return super().write(vals)
+
+    def unlink(self):
+        if any(line.commitment_id.state != 'draft' for line in self):
+            raise ValidationError(_("You cannot delete lines from a committed record!"))
+        return super().unlink()
 
     @api.constrains('lead_id', 'user_id')
     def _check_duplicate_lead(self):

@@ -20,8 +20,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="date" force_save="1"/>
-                            <field name="user_id"/>
+                            <field name="date" force_save="1" readonly="state != 'draft'"/>
+                            <field name="user_id" readonly="state != 'draft'"/>
                             <field name="company_id" invisible="1"/>
                             <field name="company_currency" invisible="1"/>
                         </group>
@@ -32,7 +32,7 @@
                     </group>
                     <notebook>
                         <page string="Opportunities" name="opportunities">
-                            <field name="commitment_line_ids">
+                            <field name="commitment_line_ids" readonly="state != 'draft'">
                                 <tree editable="bottom">
                                     <field name="lead_id" options="{'no_create': True, 'no_create_edit': True}"/>
                                     <field name="date_deadline"/>
@@ -63,7 +63,7 @@
                         </page>
                         <page string="New Opportunities" name="new_opportunities">
                             <field name="available_lead_ids" invisible="1"/>
-                            <field name="new_line_ids">
+                            <field name="new_line_ids" readonly="state != 'draft'">
                                 <tree editable="bottom">
                                     <field name="lead_id" 
                                            options="{'no_create': True, 'no_create_edit': True}"
